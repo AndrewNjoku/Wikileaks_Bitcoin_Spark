@@ -22,7 +22,9 @@ public class TopDonorsSpark
 	//
 	static final String requiredBitcoinAddress= "{blah blah }";
 	
-	static JavaPairRDD<String,TransactionOut>hashRepo;
+	static JavaRDD<TransactionOutWritable> toutRepo;
+	
+	//static JavaPairRDD<String,TransactionOut>hashRepo;
 	
 	
 	static void filterTransactionsAndCache(SparkSession context, String tout) {
@@ -44,7 +46,7 @@ public class TopDonorsSpark
 	    //perform the conversion to inflate my pojo
 	    
 	    
-	   JavaRDD<TransactionOutWritable> out = AllLines.map(lines -> TransactionOutWritable
+	    toutRepo = AllLines.map(lines -> TransactionOutWritable
 			                                 .convertToTransactionOut(lines))
 			                                 .filter(new Function<TransactionOutWritable, Boolean>() {
 			                             		
@@ -72,6 +74,22 @@ public class TopDonorsSpark
 		
 	}
 	
+    private static void JoinDatasets(SparkSession context, String tin) {
+		
+		// we will read in the tin file and compare its hash to the hashes in our cached RDD
+    	
+    	
+		
+		JavaRDD<String> tinLines= context.read().textFile(tin).javaRDD();
+		
+		
+		
+		
+	    
+		
+		
+	}
+	
 
     public static void main( String[] args )
     {
@@ -93,6 +111,9 @@ public class TopDonorsSpark
         SparkSession spark = SparkSession.builder()
         		                           .config(myConfig)
         		                           .getOrCreate();
+        
+        
+       // spark.sparkContext().parallelize(seq, numSlices, evidence$1)
         		                           
         		 
         		 
@@ -105,33 +126,15 @@ public class TopDonorsSpark
         
         //This is similiar to the Maps initialise step
         
-        
-        
-        //Now we perform the "MAP", we will inut the tout join with cache and perform a sort on this 
-        //Dataset
+       
         
         JoinDatasets(spark,args[1]);
         
     }
 
 
-	private static void inflateRepo(SparkSession a) {
-		// TODO Auto-generated method stub
-		
-		a.sparkContext().pa
-		
-	}
+	
 
 
-	private static void JoinDatasets(SparkSession context, String tin) {
-		
-		// To begin with we will 
-		
-		JavaRDD<String> tinLines= context.read().textFile(tin).javaRDD();
-		
-		
-	    
-		
-		
-	}
+	
 }

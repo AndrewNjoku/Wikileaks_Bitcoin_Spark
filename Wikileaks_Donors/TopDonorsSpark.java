@@ -1,6 +1,7 @@
 package Bitcoin.Wikileaks_Donors;
 
 import java.util.regex.Pattern;
+import org.apache.spark.serializer.KryoSerializer;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
@@ -80,13 +81,22 @@ public class TopDonorsSpark
         
         //Start the session and instantiate the context we will be workign with 
         
+        
+        
+        SparkConf myConfig = new SparkConf().setAppName("Simple Application")
+       		                                .setMaster("local")
+       		                                .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+       		                 	            .set("spark.kryo.registrator",TransactionOutWritable.class.getName());
+       		                                
+       		                              
         SparkSession spark = SparkSession.builder()
-        		 .appName("Simple Application")
-        		 .master("local")
-        		 .
-        		 .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-        	     .set("spark.kryoserializer.buffer.max", "128m")
-        	     .set("spark.kryoserializer.buffer", "64m")
+        		                           .config(myConfig)
+        		                           .getOrCreate();
+        		                           
+        		 
+        		 
+        		 
+        		
 	             
 	             .getOrCreate();
         

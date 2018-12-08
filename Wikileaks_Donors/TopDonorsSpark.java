@@ -2,7 +2,10 @@ package Bitcoin.Wikileaks_Donors;
 
 import java.util.regex.Pattern;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 /**
@@ -16,7 +19,7 @@ public class TopDonorsSpark
 	static final String filterPattern = "{blah blah }";
 	
 	
-	static void initialiseSession(String tout, String tin, String OutputDest) {
+	static void filterTransactionsAndCache(SparkSession context, String tout) {
 		
 		
 		//This program is a spark version of my TopTen wikileaks hadoop program. In my Java Hadoop
@@ -28,32 +31,30 @@ public class TopDonorsSpark
 		//Pattern for performing filtering on idinitial dataset
 		
 		Pattern wikileaksFilter=Pattern.compile("{asfasdfa}");
+	
+	    
+	    JavaRDD<String> AllLines= context.read().textFile(tout).javaRDD();
+	    
+	    JavaRDD<String> WikileaksTransactions= AllLines.filter(new Function<String, Boolean>() {
 		
-		String logFile = "/home/lolo/Documents/Andria/Big_Data/Spark/example.txt"; // Should be some file on your system
+			private static final long serialVersionUID = 1L;
+			private String wikileaksBitcoinAddress = "{blah}";
 	    
-	    SparkSession spark = SparkSession.builder()
-	    		             .appName("Simple Application")
-	    		             .getOrCreate();
+			public Boolean call(String line) throws Exception {
+				
+				return line.contains(wikileaksBitcoinAddress);
+			}
+			//cache this RDD since accessign cache will be much more efficient than accessing the HDFS 
+			//again since network is the number one bottleneck in this application and the file is small 
+			//enough to be stored in workign memory
+			
+		}).cache();
 	    
-	    JavaRDD<String> initialLines= spark.read().textFile(tout).javaRDD();
-	    
-	    JavaRDD<String> afterLines= initialLines.(line -> isDefined)
-	    
-	    
-	   
-	    
-		
-		
+
 		
 	}
 	
-	
-	
-	
-	
-	
-	
-	
+
     public static void main( String[] args )
     {
         if (args.length < 1) {
@@ -61,7 +62,13 @@ public class TopDonorsSpark
            	       System.exit(1);
         	     }
         
+        //Start the session and instantiate the context we will be workign with 
         
-        initialiseSession( args[0], args[1],args[2]);
+        SparkSession spark = SparkSession.builder()
+	             .appName("Simple Application")
+	             .getOrCreate();
+        
+        //First we filter and cache output 
+        filterTransactionsAndCache(spark,args[0]);
     }
 }

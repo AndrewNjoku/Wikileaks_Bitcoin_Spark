@@ -1,5 +1,5 @@
 package Bitcoin.Wikileaks_Donors;
 
-public class TransactionIn {
+public class TransactionInWritable {
 
 }

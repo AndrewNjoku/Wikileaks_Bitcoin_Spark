@@ -27,7 +27,7 @@ public class TopDonorsSpark
 	
 	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
 	
-	static JavaPairRDD<String,TransactionIn> tinRepo;
+	static JavaPairRDD<String,TransactionInWritable> tinRepo;
 	
 	//static JavaPairRDD<String,TransactionOut>hashRepo;
 	
@@ -95,16 +95,16 @@ public class TopDonorsSpark
 		    
 		    //This is my repo , now all i have to do is compare the keys to make the join
 		    
-		    tinRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionIn>() {
+		    tinRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionInWritable>() {
 		    	
 
 		    	@Override
-	            public Tuple2<String,TransactionIn> call(String s) throws Exception {
+	            public Tuple2<String,TransactionInWritable> call(String s) throws Exception {
 	                String[] words = s.split(",");
 	                
-	                TransactionIn tin = TransactionIn.convertToTransactionIn(s);
+	                TransactionInWritable tin = TransactionInWritable.convertToTransactionIn(s);
 	             
-	                return new Tuple2(words[1], tout);
+	                return new Tuple2(words[1], tin);
 	            }
 
 		    	
@@ -112,13 +112,13 @@ public class TopDonorsSpark
 		
 	}
 	
-    private static void JoinDatasets(SparkSession context, String tin) {
+    private static void JoinDatasetsOutputFile(SparkSession context) {
 		
 		// we will read in the tin file and compare its hash to the hashes in our cached RDD
     	
     	
 		
-		JavaRDD<String> tinLines= context.read().textFile(tin).javaRDD();
+		JavaPairRDD<String , Tuple2<TransactionOutWritable,TransactionInWritable>> JoinedMatey= toutRepo.join(tinRepo);
 		
 		
 		
@@ -162,13 +162,11 @@ public class TopDonorsSpark
         //First we filter and cache output 
         filterTransactionsAndCache(spark,args[0]);
         
+        //Do the same for Tin, We have filtered resuts so safe to cache both. Caching is faster!
         readTransInandCreateRDD(spark,args[1]);
         
         //This is similiar to the Maps initialise step
-        
-       
-        
-        JoinDatasets(spark,args[1]);
+        JoinDatasetsOutputFile(spark);
         
     }
 

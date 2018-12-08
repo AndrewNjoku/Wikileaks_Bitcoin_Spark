@@ -64,6 +64,7 @@ public class TopDonorsSpark
 			                         			
 			                         		}).cache();
 			                                 
+	   
 	    
 	  
 	    
@@ -97,15 +98,14 @@ public class TopDonorsSpark
         		 
         		 
         		
-	             
-	             .getOrCreate();
+	            
         
         //First we filter and cache output 
         filterTransactionsAndCache(spark,args[0]);
         
         //This is similiar to the Maps initialise step
         
-        inflateRepo();
+        
         
         //Now we perform the "MAP", we will inut the tout join with cache and perform a sort on this 
         //Dataset

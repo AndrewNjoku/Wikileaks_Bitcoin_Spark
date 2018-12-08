@@ -143,7 +143,7 @@ public class TopDonorsSpark
         SparkConf myConfig = new SparkConf().setAppName("Simple Application")
        		                                .setMaster("local")
        		                                .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-       		                 	            .set("spark.kryo.registrator",TransactionOutWritable.class.getName());
+       		                 	            .set("spark.kryo.registrator",TransactionKyroRegistrator.class.getName());
        		                                
        		                              
         SparkSession spark = SparkSession.builder()

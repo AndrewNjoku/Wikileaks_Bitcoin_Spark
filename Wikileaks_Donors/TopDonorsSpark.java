@@ -8,10 +8,12 @@ import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 
 import POJO.TransactionOutWritable;
+import scala.Tuple2;
 /**
  * Hello world!
  *
@@ -22,7 +24,7 @@ public class TopDonorsSpark
 	//
 	static final String requiredBitcoinAddress= "{blah blah }";
 	
-	static JavaRDD<TransactionOutWritable> toutRepo;
+	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
 	
 	//static JavaPairRDD<String,TransactionOut>hashRepo;
 	
@@ -46,25 +48,22 @@ public class TopDonorsSpark
 	    //perform the conversion to inflate my pojo
 	    
 	    
-	    toutRepo = AllLines.map(lines -> TransactionOutWritable
-			                                 .convertToTransactionOut(lines))
-			                                 .filter(new Function<TransactionOutWritable, Boolean>() {
-			                             		
-			                         			private static final long serialVersionUID = 1L;
-			                         			private String wikileaksBitcoinAddress = "{blah}";
-			                         	    
-	
-			                         			//cache this RDD since accessign cache will be much more efficient than accessing the HDFS 
-			                         			//again since network is the number one bottleneck in this application and the file is small 
-			                         			//enough to be stored in workign memory
+	    JavaRDD<String>tfiltered = AllLines.filter(line -> line.contains(requiredBitcoinAddress));
+	    
+	    toutRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionOutWritable>() {
+	    	
+	    	@Override
+            public Tuple2<String,TransactionOutWritable> call(String s) throws Exception {
+                String[] words = s.split(",");
+                
+                TransactionOutWritable tout = TransactionOutWritable.convertToTransactionOut(s);
+             
+                return new Tuple2(words[1], tout);
+            }
 
-												@Override
-												public Boolean call(TransactionOutWritable t) throws Exception {
-													
-													return t.isthisWikileaks(requiredBitcoinAddress);
-												}
-			                         			
-			                         		}).cache();
+	    	
+	    	
+		}).cache();
 			                                 
 	   
 	    

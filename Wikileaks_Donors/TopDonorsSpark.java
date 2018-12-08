@@ -1,5 +1,6 @@
 package Bitcoin.Wikileaks_Donors;
 
+import java.util.List;
 import java.util.regex.Pattern;
 import org.apache.spark.serializer.KryoSerializer;
 
@@ -26,7 +27,7 @@ public class TopDonorsSpark
 	
 	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
 	
-	static JavaPairRDD<String,TransactionOutWritable> tinRepo;
+	static JavaPairRDD<String,TransactionIn> tinRepo;
 	
 	//static JavaPairRDD<String,TransactionOut>hashRepo;
 	
@@ -84,8 +85,12 @@ public class TopDonorsSpark
 		    //perform the conversion to inflate my pojo
 		    
 		   JavaRDD<String>Keys =toutRepo.keys();
+		   
+		  List<String > keys = Keys.collect();
+		  
+		  
 		    
-		   JavaRDD<String>tfiltered = AllLines.filter(line -> line.contains(keys));
+		   JavaRDD<String>tfiltered = AllLines.filter( line -> line.contains(keys.iterator().next()));
 		    
 		    
 		    //This is my repo , now all i have to do is compare the keys to make the join

@@ -26,6 +26,8 @@ public class TopDonorsSpark
 	
 	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
 	
+	static JavaPairRDD<String,TransactionOutWritable> tinRepo;
+	
 	//static JavaPairRDD<String,TransactionOut>hashRepo;
 	
 	
@@ -50,6 +52,9 @@ public class TopDonorsSpark
 	    
 	    JavaRDD<String>tfiltered = AllLines.filter(line -> line.contains(requiredBitcoinAddress));
 	    
+	    
+	    //This is my repo , now all i have to do is compare the keys to make the join
+	    
 	    toutRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionOutWritable>() {
 	    	
 	    	@Override
@@ -70,6 +75,35 @@ public class TopDonorsSpark
 	  
 	    
 
+		
+	}
+	private static void readTransInandCreateRDD(SparkSession context, String tin) {
+		
+		   JavaRDD<String> AllLines= context.read().textFile(tin).javaRDD();
+		    
+		    //perform the conversion to inflate my pojo
+		    
+		   JavaRDD<String>Keys =toutRepo.keys();
+		    
+		   JavaRDD<String>tfiltered = AllLines.filter(line -> line.contains(keys));
+		    
+		    
+		    //This is my repo , now all i have to do is compare the keys to make the join
+		    
+		    tinRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionIn>() {
+		    	
+
+		    	@Override
+	            public Tuple2<String,TransactionIn> call(String s) throws Exception {
+	                String[] words = s.split(",");
+	                
+	                TransactionIn tin = TransactionIn.convertToTransactionIn(s);
+	             
+	                return new Tuple2(words[1], tout);
+	            }
+
+		    	
+			}).cache();		
 		
 	}
 	
@@ -123,6 +157,8 @@ public class TopDonorsSpark
         //First we filter and cache output 
         filterTransactionsAndCache(spark,args[0]);
         
+        readTransInandCreateRDD(spark,args[1]);
+        
         //This is similiar to the Maps initialise step
         
        
@@ -130,6 +166,8 @@ public class TopDonorsSpark
         JoinDatasets(spark,args[1]);
         
     }
+
+	
 
 
 	

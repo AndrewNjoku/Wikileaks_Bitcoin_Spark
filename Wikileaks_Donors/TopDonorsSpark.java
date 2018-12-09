@@ -1,5 +1,6 @@
 package Bitcoin.Wikileaks_Donors;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.apache.spark.serializer.KryoSerializer;
@@ -22,7 +23,7 @@ import scala.Tuple2;
  */
 public class TopDonorsSpark 
 {
-	
+	static final String outputFile="/Andria/Output/";
 	//
 	static final String requiredBitcoinAddress= "{ blah blah }";
 	
@@ -30,7 +31,7 @@ public class TopDonorsSpark
 	
 	static JavaPairRDD<String,TransactionInWritable> tinRepo;
 	
-	//static JavaPairRDD<String,TransactionOut>hashRepo;
+	
 	
 	
 	static void filterTransactionsAndCache(SparkSession context, String tout) {
@@ -106,10 +107,12 @@ public class TopDonorsSpark
 	                
 	                TransactionInWritable tin = TransactionInWritable.convertToTransactionIn(s);
 	             
+	                
+	                //The hash is stored in [1] this time
 	                return new Tuple2(words[1], tin);
 	            }
 
-		    	
+		    	//we can also cache this much smaller dataset to speed things up
 			}).cache();		
 		
 	}
@@ -120,11 +123,26 @@ public class TopDonorsSpark
     	
     	
 		
-		JavaPairRDD<String , Tuple2<TransactionOutWritable,TransactionInWritable>> JoinedMatey= toutRepo.join(tinRepo);
+    	JavaPairRDD<String , Tuple2<TransactionOutWritable,TransactionInWritable>> JoinedMatey;
+		
+		JoinedMatey= toutRepo.join(tinRepo);
+		
+		//RDD containing one object which holds infor of both tout and tin transactions
+		
+		JavaPairRDD<String, TransactionsJoined>JoinedTransMatey = JoinedMatey.mapValues(x -> new TransactionsJoined(x._2,x._1));
+		
+		JavaPairRDD<String, Tuple2<TransactionOutWritable, TransactionInWritable>> JoinedSorted;
+		
+	
+		//use sort by override sort function in order to point to the BTC value as the sorting key
 		
 		
 		
 		
+		//Output results to text file in the HDFS
+		
+		JoinedMatey.saveAsTextFile(outputFile);
+	
 	    
 		
 		
@@ -141,8 +159,9 @@ public class TopDonorsSpark
         //Start the session and instantiate the context we will be workign with 
         
         
+        //Set to local since running on local machine as master
         
-        SparkConf myConfig = new SparkConf().setAppName("Simple Application")
+        SparkConf myConfig = new SparkConf().setAppName("Wiki_Donors")
        		                                .setMaster("local")
        		                                .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
        		                 	            .set("spark.kryo.registrator",TransactionKyroRegistrator.class.getName());

@@ -13,6 +13,7 @@ import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 
+import POJO.TransactionInWritable;
 import POJO.TransactionOutWritable;
 import scala.Tuple2;
 /**
@@ -23,7 +24,7 @@ public class TopDonorsSpark
 {
 	
 	//
-	static final String requiredBitcoinAddress= "{blah blah }";
+	static final String requiredBitcoinAddress= "{ blah blah }";
 	
 	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
 	
@@ -43,7 +44,6 @@ public class TopDonorsSpark
 		
 		//Pattern for performing filtering on idinitial dataset
 		
-		Pattern wikileaksFilter=Pattern.compile("{asfasdfa}");
 	
 	    
 	    JavaRDD<String> AllLines= context.read().textFile(tout).javaRDD();
@@ -64,7 +64,9 @@ public class TopDonorsSpark
                 
                 TransactionOutWritable tout = TransactionOutWritable.convertToTransactionOut(s);
              
-                return new Tuple2(words[1], tout);
+                //Using the hash as a key for quick lookup
+                
+                return new Tuple2(words[0], tout);
             }
 
 	    	
@@ -80,22 +82,22 @@ public class TopDonorsSpark
 	}
 	private static void readTransInandCreateRDD(SparkSession context, String tin) {
 		
-		   JavaRDD<String> AllLines= context.read().textFile(tin).javaRDD();
+		  JavaRDD<String> AllLines= context.read().textFile(tin).javaRDD();
 		    
 		    //perform the conversion to inflate my pojo
 		    
-		   JavaRDD<String>Keys =toutRepo.keys();
+		  JavaRDD<String>Keys =toutRepo.keys();
 		   
 		  List<String > keys = Keys.collect();
 		  
 		  
-		    
-		   JavaRDD<String>tfiltered = AllLines.filter( line -> line.contains(keys.iterator().next()));
+		    //Filter to only lines that contain matching hashes 
+		  JavaRDD<String>tfiltered = AllLines.filter( line -> line.contains(keys.iterator().next()));
 		    
 		    
 		    //This is my repo , now all i have to do is compare the keys to make the join
 		    
-		    tinRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionInWritable>() {
+		  tinRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionInWritable>() {
 		    	
 
 		    	@Override

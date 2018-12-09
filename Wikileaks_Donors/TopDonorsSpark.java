@@ -1,10 +1,15 @@
 package Bitcoin.Wikileaks_Donors;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.apache.spark.serializer.KryoSerializer;
-
+import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -13,39 +18,32 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
-
+import com.google.common.io.Files;
 import POJO.TransactionInWritable;
 import POJO.TransactionOutWritable;
+import POJO.TransactionsJoined;
 import scala.Tuple2;
-/**
- * Hello world!
- *
- */
+import scala.reflect.io.Path;
+
+
 public class TopDonorsSpark 
 {
+	
+	//Set the amount of donors you want returned here
+	
+	static final int DonorNo = 10;
+	
 	static final String outputFile="/Andria/Output/";
 	//
 	static final String requiredBitcoinAddress= "{ blah blah }";
 	
 	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
-	
 	static JavaPairRDD<String,TransactionInWritable> tinRepo;
 	
 	
-	
-	
+
 	static void filterTransactionsAndCache(SparkSession context, String tout) {
-		
-		
-		//This program is a spark version of my TopTen wikileaks hadoop program. In my Java Hadoop
-		//version i first filtered lines in the tout text file using the Apache sparkk shell before feeding
-		//The resulting file into cache becasue it was a simpel operation.
-		//In this version i will start by performing the filtering logic inApp and will save this 
-		//new text file to the HDFS first.
-		
-		//Pattern for performing filtering on idinitial dataset
-		
-	
+
 	    
 	    JavaRDD<String> AllLines= context.read().textFile(tout).javaRDD();
 	    
@@ -69,17 +67,9 @@ public class TopDonorsSpark
                 
                 return new Tuple2(words[0], tout);
             }
-
-	    	
-	    	
+ 	
 		}).cache();
-			                                 
-	   
-	    
-	  
-	    
-
-		
+	
 	}
 	private static void readTransInandCreateRDD(SparkSession context, String tin) {
 		
@@ -117,42 +107,38 @@ public class TopDonorsSpark
 		
 	}
 	
-    private static void JoinDatasetsOutputFile(SparkSession context) {
-		
-		// we will read in the tin file and compare its hash to the hashes in our cached RDD
-    	
-    	
-		
-    	JavaPairRDD<String , Tuple2<TransactionOutWritable,TransactionInWritable>> JoinedMatey;
-		
-		JoinedMatey= toutRepo.join(tinRepo);
-		
-		//RDD containing one object which holds infor of both tout and tin transactions
-		
-		JavaPairRDD<String, TransactionsJoined>JoinedTransMatey = JoinedMatey.mapValues(x -> new TransactionsJoined(x._2,x._1));
-		
-		JavaPairRDD<String, Tuple2<TransactionOutWritable, TransactionInWritable>> JoinedSorted;
-		
-	
-		//use sort by override sort function in order to point to the BTC value as the sorting key
-		
-		
-		
-		
-		//Output results to text file in the HDFS
-		
-		JoinedMatey.saveAsTextFile(outputFile);
-	
-	    
-		
-		
-	}
-	
+    private static void JoinDatasetsOutputFile(SparkSession context) throws IOException {
 
-    public static void main( String[] args )
+    	JavaPairRDD<String , Tuple2<TransactionOutWritable,TransactionInWritable>> JoinedMatey;
+
+		JoinedMatey= toutRepo.join(tinRepo).cache();
+		
+		JavaPairRDD<String,TransactionsJoined>joinTransactionObjects =JoinedMatey.mapValues( x -> TransactionsJoined.newTransactionsJoined(x._2,x._1));
+		//We are sorting based on a call to sortBy in which we have an anonymous inner function to extract the bitcoin value in order to
+		//sort
+		JavaRDD<TransactionsJoined>FlattenTransaction=joinTransactionObjects.values().sortBy(new Function<TransactionsJoined,Double>() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Double call(TransactionsJoined v1) throws Exception {
+
+				return v1.getBtc();
+			}
+			//Change for controlling ascending descending etc
+		},true,1);
+
+		List<TransactionsJoined> top10 = FlattenTransaction.top(10);
+
+		FileUtils.writeLines(new File(outputFile), null, top10);
+	
+    }
+
+
+    public static void main( String[] args ) throws IOException
     {
         if (args.length < 1) {
-        	       System.err.println("Usage: JavaWordCount <file>");
+        	       System.err.println("need more args");
            	       System.exit(1);
         	     }
         
@@ -170,15 +156,7 @@ public class TopDonorsSpark
         SparkSession spark = SparkSession.builder()
         		                           .config(myConfig)
         		                           .getOrCreate();
-        
-        
-       // spark.sparkContext().parallelize(seq, numSlices, evidence$1)
-        		                           
-        		 
-        		 
-        		 
-        		
-	            
+     
         
         //First we filter and cache output 
         filterTransactionsAndCache(spark,args[0]);
@@ -187,7 +165,13 @@ public class TopDonorsSpark
         readTransInandCreateRDD(spark,args[1]);
         
         //This is similiar to the Maps initialise step
-        JoinDatasetsOutputFile(spark);
+        try {
+			JoinDatasetsOutputFile(spark);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
         
     }
 

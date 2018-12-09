@@ -19,9 +19,7 @@ import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 import com.google.common.io.Files;
-import POJO.TransactionInWritable;
-import POJO.TransactionOutWritable;
-import POJO.TransactionsJoined;
+
 import scala.Tuple2;
 import scala.reflect.io.Path;
 

@@ -1,19 +1,17 @@
-package POJO;
+package Bitcoin.Wikileaks_Donors;
 
-import java.io.DataInput;
-import java.io.DataOutput;
+
+
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 
-import Helper_Methods.Bitcoin_Converter;
 
-public class TransactionOutWritable{
+
+public class TransactionOutWritable implements java.io.Serializable{
 	
-	
+
+	private static final long serialVersionUID = 1L;
+
 	String hash;
 	
 	String n;
@@ -50,14 +48,6 @@ public class TransactionOutWritable{
 
 
 	
-	public static TransactionOutWritable convertToTransactionOut(String line) throws IOException {
-		
-		return new TransactionOutWritable(line.split(","));
-
-
-	
-	}
-
 
 
 	public Boolean isthisWikileaks(String RequiredAddress) {
@@ -68,6 +58,29 @@ public class TransactionOutWritable{
 		}
 		return false;
 	}
+	
+
+	public static TransactionOutWritable convertToTransactionOut(String line) throws IOException {
+		
+		return new TransactionOutWritable(line.split(","));
+
+
+	
+	}
+
+
+
+
+
+	public double getBtc() {
+		// TODO Auto-generated method stub
+		return value;
+	}
+
+
+
+
+
 
 	
 

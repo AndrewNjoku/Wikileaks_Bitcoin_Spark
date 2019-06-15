@@ -1,4 +1,4 @@
-package Bitcoin.Wikileaks_Donors;
+package com.andria.bitcoin.Wikileaks_Donors.POJO;
 
 public class TransactionsJoined {
 	
@@ -28,11 +28,7 @@ public class TransactionsJoined {
 	}
 	
 	
-	
-	
-	
-	
-	
+
 	public static TransactionsJoined newTransactionsJoined(TransactionInWritable tin, TransactionOutWritable tout) {
 		
 		

@@ -1,4 +1,4 @@
-package Bitcoin.Wikileaks_Donors;
+package com.andria.bitcoin.Wikileaks_Donors.POJO;
 
 
 
@@ -12,17 +12,18 @@ public class TransactionOutWritable implements java.io.Serializable{
 
 	private static final long serialVersionUID = 1L;
 
-	String hash;
+	private String hash;
 	
-	String n;
+	private String n;
 	
-	double value;
+	private double value;
 	
-	String destinationAddress;
+	private String destinationAddress;
 	
 	
-	
-	public TransactionOutWritable(String [] words) {
+
+
+	private TransactionOutWritable(String[] words) {
 		
 
 
@@ -47,10 +48,13 @@ public class TransactionOutWritable implements java.io.Serializable{
 	}
 
 
-	
+    public String getHash() {
+        return hash;
+    }
 
 
-	public Boolean isthisWikileaks(String RequiredAddress) {
+
+    public Boolean isthisWikileaks(String RequiredAddress) {
 		
 		
 		if ( this.destinationAddress.equals(RequiredAddress)) {

@@ -1,4 +1,4 @@
-package Bitcoin.Wikileaks_Donors;
+package com.andria.bitcoin.Wikileaks_Donors.POJO;
 
 import java.io.IOException;
 
@@ -21,14 +21,13 @@ public class TransactionInWritable  implements java.io.Serializable{
 
 
 			if( words.length > 0) {
+
+
+			    tid=words[0];
 				
-				tid=words[0];
-				
-			hash=(words[1]);	
-				
-		    
-			 
-			vout=(words[2]);
+			    hash=(words[1]);
+
+			    vout=(words[2]);
 			}
 			else { 
 				
@@ -40,11 +39,6 @@ public class TransactionInWritable  implements java.io.Serializable{
 		
 		}
 
-
-		
-
-		
-
 		public static TransactionInWritable convertToTransactionIn(String line) throws IOException {
 			
 			return new TransactionInWritable(line.split(","));
@@ -53,20 +47,10 @@ public class TransactionInWritable  implements java.io.Serializable{
 		
 		}
 
-
-
-
-
-
 		public String getHash() {
 			// TODO Auto-generated method stub
 			return hash;
 		}
-
-
-
-
-
 
 		public String getID() {
 			// TODO Auto-generated method stub
@@ -74,25 +58,10 @@ public class TransactionInWritable  implements java.io.Serializable{
 		}
 
 
-
-
-
-
 		public String getVout() {
 			// TODO Auto-generated method stub
 			return vout;
 		}
-
-
-
-
-
-
-
-
-
-
-		
 
 
 	}

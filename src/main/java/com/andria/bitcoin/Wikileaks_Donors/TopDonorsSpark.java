@@ -1,27 +1,26 @@
-package Bitcoin.Wikileaks_Donors;
+package com.andria.bitcoin.Wikileaks_Donors;
 
+
+//Basics
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
-import org.apache.spark.serializer.KryoSerializer;
+
+
+
+//Specialisations
+import com.andria.bitcoin.Wikileaks_Donors.POJO.TransactionInWritable;
+import com.andria.bitcoin.Wikileaks_Donors.POJO.TransactionOutWritable;
+import com.andria.bitcoin.Wikileaks_Donors.POJO.TransactionsJoined;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;
-import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
-import com.google.common.io.Files;
-
 import scala.Tuple2;
-import scala.reflect.io.Path;
+
 
 
 public class TopDonorsSpark 
@@ -35,8 +34,8 @@ public class TopDonorsSpark
 	//
 	static final String requiredBitcoinAddress= "{ blah blah }";
 	
-	static JavaPairRDD<String,TransactionOutWritable> toutRepo;
-	static JavaPairRDD<String,TransactionInWritable> tinRepo;
+	static JavaPairRDD<String, TransactionOutWritable> toutRepo;
+	static JavaPairRDD<String, TransactionInWritable> tinRepo;
 	
 	
 
@@ -57,13 +56,13 @@ public class TopDonorsSpark
 	    	
 	    	@Override
             public Tuple2<String,TransactionOutWritable> call(String s) throws Exception {
-                String[] words = s.split(",");
+               //Again i dont need this string aray keep stuff OOP String[] words = s.split(",");
                 
                 TransactionOutWritable tout = TransactionOutWritable.convertToTransactionOut(s);
              
                 //Using the hash as a key for quick lookup
                 
-                return new Tuple2(words[0], tout);
+                return new Tuple2(tout.getHash(), tout);
             }
  	
 		}).cache();
@@ -85,23 +84,19 @@ public class TopDonorsSpark
 		    
 		    
 		    //This is my repo , now all i have to do is compare the keys to make the join
-		    
-		  tinRepo=tfiltered.mapToPair(new PairFunction<String, String, TransactionInWritable>() {
-		    	
 
-		    	@Override
-	            public Tuple2<String,TransactionInWritable> call(String s) throws Exception {
-	                String[] words = s.split(",");
-	                
-	                TransactionInWritable tin = TransactionInWritable.convertToTransactionIn(s);
-	             
-	                
-	                //The hash is stored in [1] this time
-	                return new Tuple2(words[1], tin);
-	            }
+        //we can also cache this much smaller dataset to speed things up
 
-		    	//we can also cache this much smaller dataset to speed things up
-			}).cache();		
+        tinRepo=tfiltered.mapToPair((PairFunction<String, String, TransactionInWritable>) s -> {
+// String[] words = s.split(",");
+
+TransactionInWritable tin1 = TransactionInWritable.convertToTransactionIn(s);
+
+
+//The hash is stored in [1] this time
+
+return new Tuple2(tin1.getHash(), tin1);
+}).cache();
 		
 	}
 	
@@ -111,7 +106,7 @@ public class TopDonorsSpark
 
 		JoinedMatey= toutRepo.join(tinRepo).cache();
 		
-		JavaPairRDD<String,TransactionsJoined>joinTransactionObjects =JoinedMatey.mapValues( x -> TransactionsJoined.newTransactionsJoined(x._2,x._1));
+		JavaPairRDD<String, TransactionsJoined>joinTransactionObjects =JoinedMatey.mapValues(x -> TransactionsJoined.newTransactionsJoined(x._2,x._1));
 		//We are sorting based on a call to sortBy in which we have an anonymous inner function to extract the bitcoin value in order to
 		//sort
 		JavaRDD<TransactionsJoined>FlattenTransaction=joinTransactionObjects.values().sortBy(new Function<TransactionsJoined,Double>() {

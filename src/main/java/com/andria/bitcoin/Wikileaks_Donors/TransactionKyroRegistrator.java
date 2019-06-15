@@ -1,7 +1,8 @@
-package Bitcoin.Wikileaks_Donors;
+package com.andria.bitcoin.Wikileaks_Donors;
 
-import org.apache.spark.serializer.KryoRegistrator;
-
+import com.andria.bitcoin.Wikileaks_Donors.POJO.TransactionInWritable;
+import com.andria.bitcoin.Wikileaks_Donors.POJO.TransactionOutWritable;
+import com.andria.bitcoin.Wikileaks_Donors.POJO.TransactionsJoined;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
